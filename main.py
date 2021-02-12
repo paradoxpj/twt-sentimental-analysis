@@ -1,56 +1,58 @@
-from tweepy import OAuthHandler, API, Cursor
-from textblob import TextBlob
-
-from datetime import datetime, date, time, timedelta
-from collections import Counter
-
-from dotenv import load_dotenv
 import os
 
+from tweepy import OAuthHandler, API, Cursor
+from dotenv import load_dotenv
 
-load_dotenv()
-consumer_key = os.environ.get("TWTAPI_CK")
-consumer_secret = os.environ.get("TWTAPI_CS")
-access_token = os.environ.get("TWTAPI_AT")
-access_token_secret = os.environ.get("TWTAPI_ATS")
+from constants import users_list
 
-auth = OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-auth_api = API(auth)
 
-input1 = input("Enter username: ")
-account_list = [input1]
+def fetch_user_details(auth_api, user):
+    '''A function to fetch a given user's details from Twitter API'''
+    user_item = auth_api.get_user(user)
+    # Adding user details into a list.
+    user_details = [
+        user_item.name,
+        user_item.screen_name,
+        user_item.description,
+        user_item.statuses_count,
+        user_item.friends_count,
+        user_item.followers_count,
+    ]
+    return user_details
 
-for target in account_list:
-    print("Data for "+target)
-    item = auth_api.get_user(target)
-    print(item.name)
-    print(item.screen_name)
-    print(item.description)
-    print(item.statuses_count)
-    print(item.friends_count)
-    print(item.followers_count)
+def fetch_user_tweets(auth_api, user, max_count):
+    '''A function to fetch the given user's tweets'''
+    # A list to store all the tweets by the user
+    user_tweets = []
+    # Fetching tweets of the given user from Twitter API and travesing through them.
+    for status in Cursor(auth_api.user_timeline, id=user, tweet_mode="extended").items(max_count):
+        if(status.retweeted==True):
+            # Condition to check if the tweet is not original
+            continue
+        # Appending all the necessary details related to the tweet into the user tweets list.
+        user_tweets.append(status.full_text)
+    return user_tweets
 
-print("-"*15)
+def process_users(auth_api):
+    '''A function to process all the users in the users list and perform necessary operations'''
+    # Traversing through all the users in the users list.
+    for user in users_list:
+        # Calling functions to fetch the user's details and tweets.
+        user_details = fetch_user_details(auth_api, user)
+        user_tweets = fetch_user_tweets(auth_api, user, 200)
 
-count=0
-total_polarity = 0
-tweet_count = 25
-for status in Cursor(auth_api.user_timeline, id=account_list[0], tweet_mode="extended").items():
-    if(count==0):
-        print(dir(status))
-    if(status.retweeted==True):
-        continue
-    print("-"*15)
-    print(count+1)
-    print("text: ", status.full_text)
-    blob = TextBlob(status.full_text)
-    print("polarity: ", blob.sentiment.polarity)
-    total_polarity += blob.sentiment.polarity
-    print("user: ", status.user.name)
-    #break
-    count+=1
-    if(count==tweet_count):
-        break
-print("-"*15)
-print("Average Polarity: ", total_polarity/tweet_count)
+if __name__ == "__main__":
+    '''main function'''
+    # Loading environment variables from .env file
+    load_dotenv()
+    # Assigning values of authorization keys from environment variables
+    consumer_key = os.environ.get("TWTAPI_CK")
+    consumer_secret = os.environ.get("TWTAPI_CS")
+    access_token = os.environ.get("TWTAPI_AT")
+    access_token_secret = os.environ.get("TWTAPI_ATS")
+    # Authorizing Twitter API
+    auth = OAuthHandler(consumer_key, consumer_secret)
+    auth.set_access_token(access_token, access_token_secret)
+    auth_api = API(auth)
+    # Calling a function to process users in the users list.
+    process_users(auth_api)
