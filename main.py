@@ -2,6 +2,7 @@ import os
 
 from tweepy import OAuthHandler, API, Cursor
 from dotenv import load_dotenv
+from nltk.sentiment import SentimentIntensityAnalyzer
 
 from constants import users_list
 
@@ -41,6 +42,13 @@ def process_users(auth_api):
         user_details = fetch_user_details(auth_api, user)
         user_tweets = fetch_user_tweets(auth_api, user, 200)
 
+def polarity_calculator(text):
+    '''A function that returns polarity of a text using nltk's pre trained sentiment analyzer'''
+    # Making a SentimentIntensityAnalyzer object
+    analyzer = SentimentIntensityAnalyzer()
+    # returning the polarity_scores of the given text
+    return analyzer.polarity_scores(text)
+
 if __name__ == "__main__":
     '''main function'''
     # Loading environment variables from .env file
@@ -55,4 +63,3 @@ if __name__ == "__main__":
     auth.set_access_token(access_token, access_token_secret)
     auth_api = API(auth)
     # Calling a function to process users in the users list.
-    process_users(auth_api)
