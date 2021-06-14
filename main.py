@@ -41,6 +41,13 @@ def process_users(auth_api):
         # Calling functions to fetch the user's details and tweets.
         user_details = fetch_user_details(auth_api, user)
         user_tweets = fetch_user_tweets(auth_api, user, 200)
+        polarity_list = []
+        for tweet in user_tweets:
+            polarity_list.append(polarity_calculator(tweet))
+        print("User:", user_details)
+        print("Result:")
+        for i in polarity_list:
+            print(i)
 
 def polarity_calculator(text):
     '''A function that returns polarity of a text using nltk's pre trained sentiment analyzer'''
@@ -63,3 +70,7 @@ if __name__ == "__main__":
     auth.set_access_token(access_token, access_token_secret)
     auth_api = API(auth)
     # Calling a function to process users in the users list.
+    # for i in range(10):
+    #     text = input("Enter text: ")
+    #     print(polarity_calculator(text))
+    process_users(auth_api)

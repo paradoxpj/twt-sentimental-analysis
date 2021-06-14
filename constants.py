@@ -1,2 +1,2 @@
-users_list = ['AnubhavItis',]
+users_list = ['AnubhavItis', 'paradox_pj']
 # users_list = ['paradox_pj', 'mahaysurbhi', 'AnubhavItis']
